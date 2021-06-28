@@ -2,6 +2,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fmt;
 use url::Url;
+use surf::RequestBuilder;
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct ValidatedToken {
@@ -61,7 +62,9 @@ pub async fn get_app_access_token(
     let url = Url::parse_with_params("https://id.twitch.tv/oauth2/token", &params).unwrap();
 
     let client = surf::Client::new();
-    let resp: AppAccessToken = client.post(&url).recv_json().await?;
+    let req = client.post(&url);
+    let mut res = client.send(req).await?;
+    let resp: AppAccessToken = res.body_json().await?;
 
     Ok(resp)
 }
@@ -85,7 +88,9 @@ pub async fn get_app_access_token_with_scopes(
     let url = Url::parse_with_params("https://id.twitch.tv/oauth2/token", &params).unwrap();
 
     let client = surf::Client::new();
-    let resp: AppAccessToken = client.post(&url).recv_json().await?;
+    let req = client.post(&url);
+    let mut res = client.send(req).await?;
+    let resp: AppAccessToken = res.body_json().await?;
 
     Ok(resp)
 }
@@ -101,11 +106,11 @@ pub async fn validate_token(
     let auth = format!("OAuth {}", access_token);
 
     let client = surf::Client::new();
-    let resp: ValidatedToken = client
+    let req: RequestBuilder = client
         .get("https://id.twitch.tv/oauth2/validate")
-        .set_header("authorization", auth)
-        .recv_json()
-        .await?;
+        .header("authorization", auth);
+    let mut res = client.send(req).await?;
+    let resp: ValidatedToken = res.body_json().await?;
 
     Ok(resp)
 }
@@ -118,7 +123,7 @@ pub async fn validate_token(
 pub async fn remoke_token(
     access_token: &str,
     client_id: &str,
-) -> Result<surf::http_types::StatusCode, Box<dyn std::error::Error>> {
+) -> Result<surf::StatusCode, Box<dyn std::error::Error>> {
     let mut params = HashMap::new();
     params.insert("token", access_token);
     params.insert("client_id", client_id);
@@ -126,6 +131,7 @@ pub async fn remoke_token(
     let url = Url::parse_with_params("https://id.twitch.tv/oauth2/revoke", &params).unwrap();
 
     let client = surf::Client::new();
-    let resp = client.post(&url).await?;
-    Ok(resp.status())
+    let req: RequestBuilder = client.post(&url);
+    let res = client.send(req).await?;
+    Ok(res.status())
 }
