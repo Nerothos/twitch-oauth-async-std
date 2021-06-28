@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/nerothos/twitch-oauth-async-std.svg?branch=master)](https://travis-ci.org/nerothos/twitch-oauth-async-std)
+[![Build Status](https://travis-ci.com/nerothos/twitch-oauth-async-std.svg?branch=master)](https://travis-ci.com/nerothos/twitch-oauth-async-std)
 
 Twitch OAuth token
 ===
